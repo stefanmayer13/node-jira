@@ -40,7 +40,7 @@ export default class NodeJira {
                 },
             };
 
-            Logger.info('Handling login to Jira', username);
+            this.logger.info('Handling login to Jira', username);
 
             const req = https.request(options, (res) => {
                 if (res.statusCode === 401) {
@@ -97,6 +97,6 @@ export default class NodeJira {
     }
 
     login(username, password) {
-        this.loginRx(username, password).toPromise();
+        return this.loginRx(username, password).toPromise();
     }
 }
