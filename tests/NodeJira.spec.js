@@ -5,35 +5,15 @@
 const rewire = require('rewire');
 const sinon = require('sinon');
 const chai = require('chai');
-const chaiAsPromised = require("chai-as-promised");
+const chaiAsPromised = require('chai-as-promised');
+const HttpsMock = require('./mocks/https');
 
 const NodeJira = rewire('../src/NodeJira.es6');
 
 chai.use(chaiAsPromised);
 const expect = chai.expect;
-const requestSpy = sinon.stub();
-const reqOnStub = sinon.stub();
-reqOnStub.onCall(0).callsArgWithAsync(1, '{}');
-reqOnStub.onCall(1).callsArgAsync(1);
-
-requestSpy.returns({
-    on: sinon.spy(),
-    write: sinon.spy(),
-    end: sinon.spy()
-});
-requestSpy.callsArgWith(1, {
-    statusCode: 200,
-    headers: {
-        'set-cookie': []
-    },
-    setEncoding: () => {},
-    on: reqOnStub
-});
 
 NodeJira.__set__({
-    https: {
-        request: requestSpy
-    },
     Logger: () => {
         return {
             info: () => {}
@@ -43,16 +23,34 @@ NodeJira.__set__({
 
 describe('NodeJira', () => {
     let nodeJira;
+    const hostname = 'host';
+    const port = 1234;
+    let rewiredHttps;
 
     before(() => {
         const options = {
-            host: 'host',
-            port: 1234,
+            hostname,
+            port,
             logger: {
                 console: {}
             }
         };
         nodeJira = new NodeJira(options);
+        rewiredHttps = NodeJira.__set__({
+            https: {
+                request: HttpsMock.requestStub
+            },
+        });
+    });
+
+    after(() => {
+        rewiredHttps();
+    });
+
+    beforeEach(() => {
+        HttpsMock.requestStub.reset();
+        HttpsMock.requestWriteSpy.reset();
+        HttpsMock.requestOnStub.reset();
     });
 
     describe('loginRx', () => {
@@ -61,7 +59,19 @@ describe('NodeJira', () => {
             const password = '123';
 
             return nodeJira.login(username, password).then(() => {
-                expect(requestSpy.calledOnce).to.be.true;
+                expect(HttpsMock.requestStub.calledOnce).to.be.true;
+                expect(HttpsMock.requestWriteSpy.calledOnce).to.be.true;
+                expect(JSON.parse(HttpsMock.requestWriteSpy.getCall(0).args[0])).to.be.deep.equal({
+                    username,
+                    password,
+                });
+            });
+        });
+
+        it('uses the provided host and port', () => {
+            return nodeJira.login('a', 'ab').then(() => {
+                expect(HttpsMock.requestStub.getCall(0).args[0].hostname).to.be.equal(hostname);
+                expect(HttpsMock.requestStub.getCall(0).args[0].port).to.be.equal(port);
             });
         });
     });
