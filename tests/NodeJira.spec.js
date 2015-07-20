@@ -3,7 +3,6 @@
  */
 
 const rewire = require('rewire');
-const sinon = require('sinon');
 const chai = require('chai');
 const chaiAsPromised = require('chai-as-promised');
 chai.use(chaiAsPromised);
@@ -16,9 +15,9 @@ const expect = chai.expect;
 NodeJira.__set__({
     Logger: () => {
         return {
-            info: () => {}
-        }
-    }
+            info: () => {},
+        };
+    },
 });
 
 describe('NodeJira', () => {
@@ -32,13 +31,13 @@ describe('NodeJira', () => {
             hostname,
             port,
             logger: {
-                console: {}
-            }
+                console: {},
+            },
         };
         nodeJira = new NodeJira(options);
         rewiredHttps = NodeJira.__set__({
             https: {
-                request: HttpsMock.requestStub
+                request: HttpsMock.requestStub,
             },
         });
     });
@@ -78,21 +77,21 @@ describe('NodeJira', () => {
 
         it('returns the cookie retrieved by set cookie base64 encoded', () => {
             const cookie = {
-                a:'Test123'
+                a: 'Test123',
             };
             const base64 = 'eyJhIjoiVGVzdDEyMyJ9';
             HttpsMock.requestStub.callsArgWith(1, {
                 statusCode: 200,
                 headers: {
-                    'set-cookie': cookie
+                    'set-cookie': cookie,
                 },
                 setEncoding: () => {},
-                on: HttpsMock.requestOnStub
+                on: HttpsMock.requestOnStub,
             });
 
             return expect(nodeJira.login('a', 'ab')).to.eventually.be.deep.equal({
                 setCookie: base64,
-                data: {}
+                data: {},
             });
         });
     });
