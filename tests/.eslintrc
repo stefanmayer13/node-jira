@@ -7,7 +7,11 @@
         "afterEach": true,
         "it": true
     },
+    "ecmaFeatures": {
+        "modules": false
+    },
     "rules": {
-        "no-unused-expressions": 0
+        "no-unused-expressions": 0,
+        "strict": [2, "global"]
     }
 }

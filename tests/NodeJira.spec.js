@@ -1,6 +1,7 @@
 /**
  * @author <a href="mailto:stefanmayer13@gmail.com">Stefan Mayer</a>
  */
+'use strict';
 
 const rewire = require('rewire');
 const chai = require('chai');
@@ -47,6 +48,7 @@ describe('NodeJira', () => {
     });
 
     beforeEach(() => {
+        HttpsMock.init();
         HttpsMock.requestStub.reset();
         HttpsMock.requestWriteSpy.reset();
         HttpsMock.requestOnStub.reset();
@@ -90,8 +92,20 @@ describe('NodeJira', () => {
             });
 
             return expect(nodeJira.login('a', 'ab')).to.eventually.be.deep.equal({
-                setCookie: base64,
+                cookie: base64,
                 data: {},
+            });
+        });
+
+        it('returns the userdata', () => {
+            const data = {
+                user: 123,
+            };
+            HttpsMock.requestOnStub.onCall(0).callsArgWithAsync(1, JSON.stringify(data));
+
+            return expect(nodeJira.login('a', 'ab')).to.eventually.be.deep.equal({
+                cookie: 'W10=',
+                data: data,
             });
         });
     });

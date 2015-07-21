@@ -67,7 +67,7 @@ export default class NodeJira {
                 });
             });
 
-            req.on('error', function(e) {
+            req.on('error', function nodeJiraError(e) {
                 Logger.error('problem with request: ' + e.message);
                 observer.onError(e);
                 observer.onCompleted();
@@ -84,7 +84,7 @@ export default class NodeJira {
             return prev;
         }, {data: ''}).map((data) => {
             return {
-                setCookie: new Buffer(JSON.stringify(data.setCookie)).toString('base64'),
+                cookie: new Buffer(JSON.stringify(data.setCookie)).toString('base64'),
                 data: JSON.parse(data.data),
             };
         }).map((data) => {
