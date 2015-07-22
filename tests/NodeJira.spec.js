@@ -6,17 +6,19 @@
 const rewire = require('rewire');
 const chai = require('chai');
 const chaiAsPromised = require('chai-as-promised');
-chai.use(chaiAsPromised);
+const sinon = require('sinon');
 const HttpsMock = require('./mocks/https');
 
-const NodeJira = rewire('../src/NodeJira.es6');
-
+chai.use(chaiAsPromised);
 const expect = chai.expect;
+
+const NodeJira = rewire('../src/NodeJira');
 
 NodeJira.__set__({
     Logger: () => {
         return {
             info: () => {},
+            error: () => {},
         };
     },
 });
@@ -52,6 +54,7 @@ describe('NodeJira', () => {
         HttpsMock.requestStub.reset();
         HttpsMock.requestWriteSpy.reset();
         HttpsMock.requestOnStub.reset();
+        HttpsMock.networkOnStub.reset();
     });
 
     describe('loginRx', () => {
@@ -88,7 +91,7 @@ describe('NodeJira', () => {
                     'set-cookie': cookie,
                 },
                 setEncoding: () => {},
-                on: HttpsMock.requestOnStub,
+                on: HttpsMock.networkOnStub,
             });
 
             return expect(nodeJira.login('a', 'ab')).to.eventually.be.deep.equal({
@@ -101,12 +104,61 @@ describe('NodeJira', () => {
             const data = {
                 user: 123,
             };
-            HttpsMock.requestOnStub.onCall(0).callsArgWithAsync(1, JSON.stringify(data));
+            HttpsMock.networkOnStub.onCall(0).callsArgWithAsync(1, JSON.stringify(data));
 
             return expect(nodeJira.login('a', 'ab')).to.eventually.be.deep.equal({
                 cookie: 'W10=',
                 data: data,
             });
+        });
+
+        it('returns an error if username or password is absent', () => {
+            return expect(nodeJira.login('a')).to.eventually.be.rejected.then(() => {
+                return expect(nodeJira.login('', 'b')).to.eventually.be.rejected;
+            });
+        });
+
+        it('returns an error if statuscode != 200', () => {
+            HttpsMock.requestStub.onCall(0).callsArgWith(1, {
+                statusCode: 401,
+                setEncoding: () => {},
+                on: HttpsMock.networkOnStub,
+            });
+            HttpsMock.requestStub.onCall(1).callsArgWith(1, {
+                statusCode: 403,
+                setEncoding: () => {},
+                on: HttpsMock.networkOnStub,
+            });
+            HttpsMock.requestStub.onCall(2).callsArgWith(1, {
+                statusCode: 500,
+                setEncoding: () => {},
+                on: HttpsMock.networkOnStub,
+            });
+
+            return expect(nodeJira.login('a', 'b')).to.eventually.be.rejected
+            .then(() => {
+                return expect(nodeJira.login('a', 'b')).to.eventually.be.rejected;
+            }).then(() => {
+                return expect(nodeJira.login('a', 'b')).to.eventually.be.rejected;
+            });
+        });
+
+        it('returns an error on network errors', () => {
+            rewiredHttps();
+            HttpsMock.requestOnStub.onCall(0).callsArgWith(1, 'error');
+            HttpsMock.requestStub = sinon.stub();
+            HttpsMock.requestStub.returns({
+                on: HttpsMock.requestOnStub,
+                write: HttpsMock.requestWriteSpy,
+                end: sinon.spy(),
+            });
+            rewiredHttps = NodeJira.__set__({
+                https: {
+                    request: HttpsMock.requestStub,
+                },
+            });
+
+            return expect(nodeJira.login('a', 'b')).to.eventually.be.rejectedWith('error');
         });
     });
 });

@@ -67,8 +67,8 @@ export default class NodeJira {
                 });
             });
 
-            req.on('error', function nodeJiraError(e) {
-                Logger.error('problem with request: ' + e.message);
+            req.on('error', (e) => {
+                this.logger.error('problem with request: ' + e.message);
                 observer.onError(e);
                 observer.onCompleted();
             });
@@ -89,7 +89,7 @@ export default class NodeJira {
             };
         }).map((data) => {
             if (data.errorMessages) {
-                Logger.error(data.errorMessages[0]);
+                this.logger.error(data.errorMessages[0]);
                 throw new Error(data.errorMessages[0]);
             }
             return data;

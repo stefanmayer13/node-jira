@@ -5,19 +5,21 @@
 
 const sinon = require('sinon');
 
-const requestOnStub = sinon.stub();
+const networkOnStub = sinon.stub();
 const requestWriteSpy = sinon.spy();
 const requestStub = sinon.stub();
+const requestOnStub = sinon.stub();
 
 export default {
     requestStub,
-    requestOnStub,
+    networkOnStub,
     requestWriteSpy,
+    requestOnStub,
     init() {
-        requestOnStub.onCall(0).callsArgWithAsync(1, '{}');
-        requestOnStub.onCall(1).callsArgAsync(1);
+        networkOnStub.onCall(0).callsArgWithAsync(1, '{}');
+        networkOnStub.onCall(1).callsArgAsync(1);
         requestStub.returns({
-            on: sinon.spy(),
+            on: requestOnStub,
             write: requestWriteSpy,
             end: sinon.spy(),
         });
@@ -27,7 +29,7 @@ export default {
                 'set-cookie': [],
             },
             setEncoding: () => {},
-            on: requestOnStub,
+            on: networkOnStub,
         });
     },
 };
