@@ -87,12 +87,6 @@ export default class NodeJira {
                 cookie: new Buffer(JSON.stringify(data.setCookie)).toString('base64'),
                 data: JSON.parse(data.data),
             };
-        }).map((data) => {
-            if (data.errorMessages) {
-                this.logger.error(data.errorMessages[0]);
-                throw new Error(data.errorMessages[0]);
-            }
-            return data;
         });
     }
 
