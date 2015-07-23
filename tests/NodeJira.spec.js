@@ -57,7 +57,7 @@ describe('NodeJira', () => {
         HttpsMock.networkOnStub.reset();
     });
 
-    describe('loginRx', () => {
+    describe('login', () => {
         it('makes a post request with username and password', () => {
             const username = 'test';
             const password = '123';
