@@ -14,13 +14,19 @@ const expect = chai.expect;
 const Logger = rewire('../src/Logger');
 
 describe('Logger', () => {
-    let rewiredLogger,
-        winstonMock = sinon.mock();
+    let rewiredLogger;
+    const winstonMock = sinon.mock();
+    const consoleMock = sinon.mock();
+    const fileMock = sinon.mock();
 
     before(() => {
         rewiredLogger = Logger.__set__({
             winston: {
-                Logger: winstonMock
+                Logger: winstonMock,
+                transports: {
+                    Console: consoleMock,
+                    File: fileMock,
+                },
             },
         });
     });
@@ -31,16 +37,64 @@ describe('Logger', () => {
 
     beforeEach(() => {
         winstonMock.reset();
+        consoleMock.reset();
+        fileMock.reset();
     });
 
     it('returns winston logger', () => {
         const loggerObject = {
-            logger: true
+            logger: true,
         };
         winstonMock.returns(loggerObject);
 
-        const logger = Logger();
+        const logger = new Logger();
 
         expect(logger).to.be.equal(loggerObject);
+    });
+
+    it('adds winston console transport', () => {
+        const loggerObject = {
+            logger: true,
+        };
+        winstonMock.returns(loggerObject);
+
+        new Logger({
+            console: true,
+        });
+
+        expect(winstonMock.getCall(0).args[0].transports.length).to.equal(1);
+        expect(consoleMock.calledOnce).to.be.true;
+        expect(fileMock.callCount).to.be.equal(0);
+    });
+
+    it('adds winston file transport', () => {
+        const loggerObject = {
+            logger: true,
+        };
+        winstonMock.returns(loggerObject);
+
+        new Logger({
+            file: true,
+        });
+
+        expect(winstonMock.getCall(0).args[0].transports.length).to.equal(1);
+        expect(fileMock.calledOnce).to.be.true;
+        expect(consoleMock.callCount).to.be.equal(0);
+    });
+
+    it('adds multiple transports', () => {
+        const loggerObject = {
+            logger: true,
+        };
+        winstonMock.returns(loggerObject);
+
+        new Logger({
+            console: true,
+            file: true,
+        });
+
+        expect(winstonMock.getCall(0).args[0].transports.length).to.equal(2);
+        expect(consoleMock.calledOnce).to.be.true;
+        expect(fileMock.calledOnce).to.be.true;
     });
 });
