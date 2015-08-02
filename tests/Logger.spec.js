@@ -58,10 +58,11 @@ describe('Logger', () => {
         };
         winstonMock.returns(loggerObject);
 
-        new Logger({
+        const logger = new Logger({
             console: true,
         });
 
+        expect(logger).to.be.equal(loggerObject);
         expect(winstonMock.getCall(0).args[0].transports.length).to.equal(1);
         expect(consoleMock.calledOnce).to.be.true;
         expect(fileMock.callCount).to.be.equal(0);
@@ -73,10 +74,11 @@ describe('Logger', () => {
         };
         winstonMock.returns(loggerObject);
 
-        new Logger({
+        const logger = new Logger({
             file: true,
         });
 
+        expect(logger).to.be.equal(loggerObject);
         expect(winstonMock.getCall(0).args[0].transports.length).to.equal(1);
         expect(fileMock.calledOnce).to.be.true;
         expect(consoleMock.callCount).to.be.equal(0);
@@ -88,11 +90,12 @@ describe('Logger', () => {
         };
         winstonMock.returns(loggerObject);
 
-        new Logger({
+        const logger = new Logger({
             console: true,
             file: true,
         });
 
+        expect(logger).to.be.equal(loggerObject);
         expect(winstonMock.getCall(0).args[0].transports.length).to.equal(2);
         expect(consoleMock.calledOnce).to.be.true;
         expect(fileMock.calledOnce).to.be.true;
