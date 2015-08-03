@@ -1,11 +1,8 @@
 {
     "modules": "common",
     "optional": [
-        "es7.trailingFunctionCommas"
+        "es7.trailingFunctionCommas",
+        "es7.classProperties"
     ],
-    "loose": [
-        "es6.modules",
-        "es6.classes",
-        "es6.arrowFunctions"
-    ]
+    "loose": "all"
 }

@@ -12,6 +12,7 @@ const HttpsMock = require('./mocks/https');
 chai.use(chaiAsPromised);
 const expect = chai.expect;
 
+const Login = rewire('../src/Login');
 const NodeJira = rewire('../src/NodeJira');
 
 NodeJira.__set__({
@@ -28,6 +29,7 @@ describe('NodeJira', () => {
     const hostname = 'host';
     const port = 1234;
     let rewiredHttps;
+    let rewiredNodeJira;
 
     before(() => {
         const options = {
@@ -37,16 +39,20 @@ describe('NodeJira', () => {
                 console: {},
             },
         };
-        nodeJira = new NodeJira(options);
-        rewiredHttps = NodeJira.__set__({
+        rewiredHttps = Login.__set__({
             https: {
                 request: HttpsMock.requestStub,
             },
         });
+        rewiredNodeJira = NodeJira.__set__({
+            Login: Login,
+        });
+        nodeJira = new NodeJira(options);
     });
 
     after(() => {
         rewiredHttps();
+        rewiredNodeJira();
     });
 
     beforeEach(() => {
@@ -152,7 +158,7 @@ describe('NodeJira', () => {
                 write: HttpsMock.requestWriteSpy,
                 end: sinon.spy(),
             });
-            rewiredHttps = NodeJira.__set__({
+            rewiredHttps = Login.__set__({
                 https: {
                     request: HttpsMock.requestStub,
                 },
