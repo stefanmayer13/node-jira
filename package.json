@@ -1,6 +1,6 @@
 {
   "name": "node-jira",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "NodeJS library to access Attlasian Jira's Rest API",
   "main": "lib/NodeJira.js",
   "directories": {
