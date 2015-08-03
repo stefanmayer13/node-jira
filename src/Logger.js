@@ -27,7 +27,7 @@ export default function Logger(config) {
         }
     }
 
-    return (winston.Logger)({
+    return new (winston.Logger)({
         transports: transports,
     });
 }
