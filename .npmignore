@@ -1,1 +1,7 @@
 src/
+coverage/
+.idea/
+tests/
+.babelrc
+.eslintignore
+.eslintrc
