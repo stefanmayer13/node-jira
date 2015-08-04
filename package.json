@@ -1,6 +1,6 @@
 {
   "name": "node-jira",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "description": "NodeJS library to access Attlasian Jira's Rest API",
   "main": "lib/NodeJira.js",
   "directories": {
@@ -40,6 +40,7 @@
     "sinon": "^1.15.4"
   },
   "dependencies": {
+    "boom": "^2.8.0",
     "rx": "^2.5.3",
     "winston": "^1.0.1"
   }

@@ -3,11 +3,12 @@
  */
 const https = require('https');
 const Rx = require('rx');
+const Boom = require('boom');
 
 export function loginRx(username, password) {
     return Rx.Observable.create((observer) => {
         if (!username || !password) {
-            observer.onError('Missing username and/or password');
+            observer.onError(Boom.badRequest('Missing username and/or password'));
             observer.onCompleted();
             return;
         }
@@ -34,14 +35,11 @@ export function loginRx(username, password) {
 
         const req = https.request(options, (res) => {
             if (res.statusCode === 401) {
-                return observer.onError('Username or password wrong');
+                return observer.onError(Boom.unauthorized('Username or password wrong'));
             } else if (res.statusCode === 403) {
-                return observer.onError('CAPTCHA required');
+                return observer.onError(Boom.forbidden('CAPTCHA required'));
             } else if (res.statusCode !== 200) {
-                return observer.onError({
-                    code: res.statusCode,
-                    message: res.statusMessage,
-                });
+                return observer.onError(Boom.create(res.statusCode, res.statusMessag));
             }
 
             observer.onNext({
@@ -59,7 +57,7 @@ export function loginRx(username, password) {
 
         req.on('error', (e) => {
             this.logger.error('problem with request: ' + e.message);
-            observer.onError(e);
+            observer.onError(Boom.badGateway(e));
             observer.onCompleted();
         });
         req.write(postData);
