@@ -5,31 +5,42 @@
 
 const sinon = require('sinon');
 
-const networkOnStub = sinon.stub();
-const requestWriteSpy = sinon.spy();
-const requestStub = sinon.stub();
-const requestOnStub = sinon.stub();
-
-export default {
-    requestStub,
-    networkOnStub,
-    requestWriteSpy,
-    requestOnStub,
-    init() {
-        networkOnStub.onCall(0).callsArgWithAsync(1, '{}');
-        networkOnStub.onCall(1).callsArgAsync(1);
-        requestStub.returns({
-            on: requestOnStub,
-            write: requestWriteSpy,
+export default class httpsMock {
+    constructor() {
+        this.networkOnStubProp = sinon.stub();
+        this.requestWriteSpyProp = sinon.spy();
+        this.requestStubProp = sinon.stub();
+        this.requestOnStubProp = sinon.stub();
+        this.networkOnStub.onCall(0).callsArgWithAsync(1, '{}');
+        this.networkOnStub.onCall(1).callsArgAsync(1);
+        this.requestStub.returns({
+            on: this.requestOnStub,
+            write: this.requestWriteSpy,
             end: sinon.spy(),
         });
-        requestStub.callsArgWith(1, {
+        this.requestStub.callsArgWith(1, {
             statusCode: 200,
             headers: {
                 'set-cookie': [],
             },
             setEncoding: () => {},
-            on: networkOnStub,
+            on: this.networkOnStub,
         });
-    },
-};
+    }
+
+    get networkOnStub() {
+        return this.networkOnStubProp;
+    }
+
+    get requestWriteSpy() {
+        return this.requestWriteSpyProp;
+    }
+
+    get requestStub() {
+        return this.requestStubProp;
+    }
+
+    get requestOnStub() {
+        return this.requestOnStubProp;
+    }
+}

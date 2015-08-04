@@ -4,6 +4,7 @@
 
 const Logger = require('./Logger');
 const Login = require('./Login');
+const User = require('./User');
 
 export default class NodeJira {
     constructor(options) {
@@ -14,4 +15,6 @@ export default class NodeJira {
 
     login = Login.login;
     loginRx = Login.loginRx;
+    getUserData = User.getUserData;
+    getUserDataRx = User.getUserDataRx;
 }

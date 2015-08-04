@@ -24,14 +24,16 @@ NodeJira.__set__({
     },
 });
 
-describe('NodeJira', () => {
+describe('Login', () => {
     let nodeJira;
     const hostname = 'host';
     const port = 1234;
     let rewiredHttps;
     let rewiredNodeJira;
+    let httpsMock;
 
-    before(() => {
+    beforeEach(() => {
+        httpsMock = new HttpsMock();
         const options = {
             hostname,
             port,
@@ -41,7 +43,7 @@ describe('NodeJira', () => {
         };
         rewiredHttps = Login.__set__({
             https: {
-                request: HttpsMock.requestStub,
+                request: httpsMock.requestStub,
             },
         });
         rewiredNodeJira = NodeJira.__set__({
@@ -50,17 +52,9 @@ describe('NodeJira', () => {
         nodeJira = new NodeJira(options);
     });
 
-    after(() => {
+    afterEach(() => {
         rewiredHttps();
         rewiredNodeJira();
-    });
-
-    beforeEach(() => {
-        HttpsMock.init();
-        HttpsMock.requestStub.reset();
-        HttpsMock.requestWriteSpy.reset();
-        HttpsMock.requestOnStub.reset();
-        HttpsMock.networkOnStub.reset();
     });
 
     describe('login', () => {
@@ -69,10 +63,10 @@ describe('NodeJira', () => {
             const password = '123';
 
             return nodeJira.login(username, password).then(() => {
-                expect(HttpsMock.requestStub.calledOnce).to.be.true;
-                expect(HttpsMock.requestStub.getCall(0).args[0].method).to.be.equal('POST');
-                expect(HttpsMock.requestWriteSpy.calledOnce).to.be.true;
-                expect(JSON.parse(HttpsMock.requestWriteSpy.getCall(0).args[0])).to.be.deep.equal({
+                expect(httpsMock.requestStub.calledOnce).to.be.true;
+                expect(httpsMock.requestStub.getCall(0).args[0].method).to.be.equal('POST');
+                expect(httpsMock.requestWriteSpy.calledOnce).to.be.true;
+                expect(JSON.parse(httpsMock.requestWriteSpy.getCall(0).args[0])).to.be.deep.equal({
                     username,
                     password,
                 });
@@ -81,8 +75,8 @@ describe('NodeJira', () => {
 
         it('uses the provided host and port', () => {
             return nodeJira.login('a', 'ab').then(() => {
-                expect(HttpsMock.requestStub.getCall(0).args[0].hostname).to.be.equal(hostname);
-                expect(HttpsMock.requestStub.getCall(0).args[0].port).to.be.equal(port);
+                expect(httpsMock.requestStub.getCall(0).args[0].hostname).to.be.equal(hostname);
+                expect(httpsMock.requestStub.getCall(0).args[0].port).to.be.equal(port);
             });
         });
 
@@ -91,13 +85,13 @@ describe('NodeJira', () => {
                 a: 'Test123',
             };
             const base64 = 'eyJhIjoiVGVzdDEyMyJ9';
-            HttpsMock.requestStub.callsArgWith(1, {
+            httpsMock.requestStub.callsArgWith(1, {
                 statusCode: 200,
                 headers: {
                     'set-cookie': cookie,
                 },
                 setEncoding: () => {},
-                on: HttpsMock.networkOnStub,
+                on: httpsMock.networkOnStub,
             });
 
             return expect(nodeJira.login('a', 'ab')).to.eventually.be.deep.equal({
@@ -110,7 +104,7 @@ describe('NodeJira', () => {
             const data = {
                 user: 123,
             };
-            HttpsMock.networkOnStub.onCall(0).callsArgWithAsync(1, JSON.stringify(data));
+            httpsMock.networkOnStub.onCall(0).callsArgWithAsync(1, JSON.stringify(data));
 
             return expect(nodeJira.login('a', 'ab')).to.eventually.be.deep.equal({
                 cookie: 'W10=',
@@ -125,20 +119,20 @@ describe('NodeJira', () => {
         });
 
         it('returns an error if statuscode != 200', () => {
-            HttpsMock.requestStub.onCall(0).callsArgWith(1, {
+            httpsMock.requestStub.onCall(0).callsArgWith(1, {
                 statusCode: 401,
                 setEncoding: () => {},
-                on: HttpsMock.networkOnStub,
+                on: httpsMock.networkOnStub,
             });
-            HttpsMock.requestStub.onCall(1).callsArgWith(1, {
+            httpsMock.requestStub.onCall(1).callsArgWith(1, {
                 statusCode: 403,
                 setEncoding: () => {},
-                on: HttpsMock.networkOnStub,
+                on: httpsMock.networkOnStub,
             });
-            HttpsMock.requestStub.onCall(2).callsArgWith(1, {
+            httpsMock.requestStub.onCall(2).callsArgWith(1, {
                 statusCode: 500,
                 setEncoding: () => {},
-                on: HttpsMock.networkOnStub,
+                on: httpsMock.networkOnStub,
             });
 
             return expect(nodeJira.login('a', 'b')).to.eventually.be.rejected
@@ -151,16 +145,16 @@ describe('NodeJira', () => {
 
         it('returns an error on network errors', () => {
             rewiredHttps();
-            HttpsMock.requestOnStub.onCall(0).callsArgWith(1, 'error');
-            HttpsMock.requestStub = sinon.stub();
-            HttpsMock.requestStub.returns({
-                on: HttpsMock.requestOnStub,
-                write: HttpsMock.requestWriteSpy,
+            httpsMock.requestOnStub.onCall(0).callsArgWith(1, 'error');
+            const requestStub = sinon.stub();
+            requestStub.returns({
+                on: httpsMock.requestOnStub,
+                write: httpsMock.requestWriteSpy,
                 end: sinon.spy(),
             });
             rewiredHttps = Login.__set__({
                 https: {
-                    request: HttpsMock.requestStub,
+                    request: requestStub,
                 },
             });
 
